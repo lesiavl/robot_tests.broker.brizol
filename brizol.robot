@@ -193,7 +193,7 @@ Login
   
 Змінити документ в ставці
   [Arguments]  ${username}  ${path}  ${bidid}  ${docid}
-  Wait Until Keyword Succeeds   30 x   10 s   Дочекатися вигрузки файлу
+  Wait Until Keyword Succeeds   30 x   10 s   Дочекатися вивантаження файлу до ЦБД
   Choose File  xpath=//div[contains(text(), 'Замiнити')]/form/input  ${path}
   Click Element  xpath=//button[contains(text(), 'Вiдправити')]
   Wait Until Element Is Visible  xpath=//div[contains(@class, 'alert-success')]
@@ -232,6 +232,6 @@ Input Date
   ${date}=  convert_datetime_to_brizol_format  ${date}
   Input Text  ${elem_locator}  ${date}
 
-Дочекатися вигрузки файлу
+Дочекатися вивантаження файлу до ЦБД
   Reload Page
   Wait Until Element Is Visible   xpath=//div[contains(text(), 'Замiнити')]
