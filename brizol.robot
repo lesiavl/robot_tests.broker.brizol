@@ -5,7 +5,7 @@ Library  DateTime
 Library  brizol_service.py
 
 *** Variables ***
-${locator.tenderId}  xpath=//div[contains(text(), 'TenderID')]/following-sibling::div/b
+
 
 *** Keywords ***
 
@@ -51,8 +51,8 @@ Login
   Input Date  name=Tender[tenderPeriod][endDate]  ${tender_data.data.tenderPeriod.endDate}   
   Додати предмет  ${items[0]}  0
   Click Element  xpath= //button[@class="btn btn-default btn_submit_form"]
-  Wait Until Page Contains Element  ${locator.tenderId}  10
-  ${tender_uaid}=  Get Text  ${locator.tenderId}  
+  Wait Until Page Contains Element  xpath=//b[@tid="tenderID"]  10
+  ${tender_uaid}=  Get Text  xpath=//b[@tid="tenderID"]  
   [return]  ${tender_uaid}
 
 Додати предмет

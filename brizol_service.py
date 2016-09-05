@@ -25,9 +25,9 @@ def convert_string_from_dict_brizol(string):
         u'Код ДК': u'ДКПП',
         u'з урахуванням ПДВ': True,
         u'без урахуванням ПДВ': False,
-        u'Очiкування пропозицiй': u'active.tendering',
+        u'ОЧIКУВАННЯ ПРОПОЗИЦIЙ': u'active.tendering',
         u'Перiод уточнень': u'active.enquires',
-        u'Аукцiон': u'active.auction',
+        u'АУКЦIОН': u'active.auction',
     }.get(string, string)
 
 def adapt_procuringEntity(tender_data):
