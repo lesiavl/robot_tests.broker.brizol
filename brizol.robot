@@ -5,7 +5,7 @@ Library  DateTime
 Library  brizol_service.py
 
 *** Variables ***
-${locator.tenderId}  xpath=//div[contains(text(), 'TenderID')]/following-sibling::div/b
+
 
 *** Keywords ***
 
@@ -19,7 +19,7 @@ ${locator.tenderId}  xpath=//div[contains(text(), 'TenderID')]/following-sibling
   Open Browser  ${USERS.users['${username}'].homepage}  ${USERS.users['${username}'].browser}  alias=${username}
   Set Window Size  @{USERS.users['${username}'].size}
   Set Window Position  @{USERS.users['${username}'].position}
-  Run Keyword If  '${username}' != 'brizol_Viewer'  Login  ${username}
+  Run Keyword If  '${username}' != 'brizol_Viewer_auction'  Login  ${username}
 
 Login
   [Arguments]  ${username}
@@ -38,7 +38,7 @@ Login
   Switch Browser  ${username}
   Reload Page
   Wait Until Page Contains Element  xpath=//a[@href="/buyer/tenders"]  10
-  Click Element  xpath=//a[@href="/buyer/tenders"]
+  Click Element  xpath=//a[@href="http://eauction.byustudio.in.ua/tenders"]
   Click Element  xpath=//a[contains(@href,"/buyer/tender/create")]
   Conv And Select From List By Value  name=Tender[value][valueAddedTaxIncluded]  ${tender_data.data.value.valueAddedTaxIncluded}
   ConvToStr And Input Text  name=Tender[value][amount]  ${tender_data.data.value.amount}
@@ -51,8 +51,8 @@ Login
   Input Date  name=Tender[tenderPeriod][endDate]  ${tender_data.data.tenderPeriod.endDate}   
   Додати предмет  ${items[0]}  0
   Click Element  xpath= //button[@class="btn btn-default btn_submit_form"]
-  Wait Until Page Contains Element  ${locator.tenderId}  10
-  ${tender_uaid}=  Get Text  ${locator.tenderId}  
+  Wait Until Page Contains Element  xpath=//b[@tid="auctionID"]  10
+  ${tender_uaid}=  Get Text  xpath=//b[@tid="auctionID"]
   [return]  ${tender_uaid}
 
 Додати предмет
@@ -62,31 +62,26 @@ Login
   Input text  name=Tender[items][${index}][quantity]  ${item.quantity}
   Select From List By Value  name=Tender[items][${index}][unit][code]  ${item.unit.code}
   Click Element  name=Tender[items][${index}][classification][description]
+  Wait Until Element Is Visible  id=search
   Input text  id=search  ${item.classification.description}
   Wait Until Page Contains  ${item.classification.description}
   Click Element  xpath=//span[contains(text(),'${item.classification.description}')]
   Click Element  id=btn-ok
-  Wait Until Element Is Not Visible  xpath=//div[@class="modal-backdrop fade"]
-  Click Element  name=Tender[items][${index}][additionalClassifications][0][description]
-  Input text  id=search  ${item.additionalClassifications[0].description}
-  Wait Until Page Contains  ${item.additionalClassifications[0].description}
-  Click Element  xpath=//div[@id="${item.additionalClassifications[0].id}"]/div/span[contains(text(), '${item.additionalClassifications[0].description}')]
-  Click Element  id=btn-ok
-  Wait Until Element Is Not Visible  xpath=//div[@class="modal-backdrop fade"]
+  Wait Until Element Is Not Visible  xpath=//div[@class="modal-backdrop fade"]  10
   Input text  name=Tender[items][${index}][deliveryAddress][countryName]  ${item.deliveryAddress.countryName}
   Input text  name=Tender[items][${index}][deliveryAddress][region]  ${item.deliveryAddress.region}
   Input text  name=Tender[items][${index}][deliveryAddress][locality]  ${item.deliveryAddress.locality}
   Input text  name=Tender[items][${index}][deliveryAddress][streetAddress]  ${item.deliveryAddress.streetAddress}
   Input text  name=Tender[items][${index}][deliveryAddress][postalCode]  ${item.deliveryAddress.postalCode}
-  Input Date  name=Tender[items][${index}][deliveryDate][endDate]  ${item.deliveryDate.endDate}
   Select From List By Value  name=Tender[procuringEntity][contactPoint][fio]  24
 
 Завантажити документ
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}
   Switch Browser  ${username}
   Go to  ${USERS.users['${username}'].homepage}
+  Click Element  xpath=//div[@tid="tender_dropdown"]/button
   Click Element  xpath=//a[@href="/buyer/tenders"]
-  Click Element  xpath=//div[@id="w1"]/div[2]//a[@class="btn btn-success"]   
+  Click Element  xpath=//div[@id="w1"]/div[2]//a[@class="btn btn-success"]
   Click Element  xpath=//a[contains(text(),'Редагувати')]
   Choose File  name=FileUpload[file]  ${filepath}
   Click Button  xpath=//button[@class="btn btn-default btn_submit_form"]
@@ -94,12 +89,13 @@ Login
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tenderID}
   Switch browser  ${username}
-  Go To  http://prozorroy.byustudio.in.ua/tenders/
+  Go To  http://eauction.byustudio.in.ua/tenders/
   Input text  name=TendersSearch[tender_cbd_id]  ${tenderID}
   Click Element  xpath=//button[@class="btn btn-success top-buffer margin23"]
-  Sleep  2
-  Click Element  xpath=//a[contains(text(), 'Детальнiше')]
-  Wait Until Page Contains  ${tenderID}
+  Wait Until Element Is Enabled  xpath=//h3[contains(text(),'${tenderID}')]/ancestor::div[@class="row"]/descendant::a[@tid="more"]
+  Get Element Attribute  xpath=//h3[contains(text(),'${tenderID}')]/ancestor::div[@class="row"]/descendant::a[@tid="more"]@href
+  Click Element  xpath=//h3[contains(text(),'${tenderID}')]/ancestor::div[@class="row"]/descendant::a[@tid="more"]
+  Wait Until Element Is Visible  xpath=//*[@tid="auctionID"]
 
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tenderID}
@@ -165,6 +161,7 @@ Login
   
 Подати цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
+  Capture Page Screenshot
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
   ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${bid.data.value.amount}
   Click Element  xpath=//button[contains(text(), 'Вiдправити')]
@@ -173,9 +170,8 @@ Login
 Скасувати цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  Click Element  name=delete_bids
-  Confirm Action
-  Capture Page Screenshot
+  Execute Javascript  window.confirm = function(msg) { return true; }
+  Click Element  xpath=//button[@name="delete_bids"]
   
 Змінити цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
@@ -194,6 +190,7 @@ Login
 Змінити документ в ставці
   [Arguments]  ${username}  ${path}  ${bidid}  ${docid}
   Wait Until Keyword Succeeds   30 x   10 s   Дочекатися вивантаження файлу до ЦБД
+  Execute Javascript  window.confirm = function(msg) { return true; }
   Choose File  xpath=//div[contains(text(), 'Замiнити')]/form/input  ${path}
   Click Element  xpath=//button[contains(text(), 'Вiдправити')]
   Wait Until Element Is Visible  xpath=//div[contains(@class, 'alert-success')]

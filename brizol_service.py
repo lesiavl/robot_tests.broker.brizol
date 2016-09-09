@@ -21,13 +21,12 @@ def convert_string_from_dict_brizol(string):
         u"True": u"1",
         u"False": u"0",
         u"Відкриті торги": u"aboveThresholdUA",
-        u'Код ДК 021-2015 (CPV)': u'CPV',
-        u'Код ДК': u'ДКПП',
+        u'Код CAV': u'CAV',
         u'з урахуванням ПДВ': True,
         u'без урахуванням ПДВ': False,
-        u'Очiкування пропозицiй': u'active.tendering',
+        u'ОЧIКУВАННЯ ПРОПОЗИЦIЙ': u'active.tendering',
         u'Перiод уточнень': u'active.enquires',
-        u'Аукцiон': u'active.auction',
+        u'АУКЦIОН': u'active.auction',
     }.get(string, string)
 
 def adapt_procuringEntity(tender_data):
