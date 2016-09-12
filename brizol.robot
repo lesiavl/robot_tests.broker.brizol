@@ -92,7 +92,7 @@ Login
   Go To  http://eauction.byustudio.in.ua/tenders/
   Input text  name=TendersSearch[tender_cbd_id]  ${tenderID}
   Click Element  xpath=//button[@class="btn btn-success top-buffer margin23"]
-  Wait Until Element Contains  xpath=//div[@class="summary"]/b[2]  1  10
+  Wait Until Keyword Succeeds  20x  200ms  Wait Until Element Contains  xpath=//div[@class="summary"]/b[2]  1
   Get Element Attribute  xpath=//h3[contains(text(),'${tenderID}')]/ancestor::div[@class="row"]/descendant::a[@tid="more"]@href
   Click Element  xpath=//h3[contains(text(),'${tenderID}')]/ancestor::div[@class="row"]/descendant::a[@tid="more"]
   Wait Until Element Is Visible  xpath=//*[@tid="auctionID"]
