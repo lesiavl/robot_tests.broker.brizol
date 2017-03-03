@@ -46,10 +46,10 @@ Login
   ${number_of_items}=  Get Length  ${items}
   ${tenderAttempts}=   Convert To String   ${tender_data.data.tenderAttempts}
   Switch Browser  ${username}
-  Wait Until Page Contains Element  xpath=//a[@href="https://eauction.brizol.net/tenders"]  10
-  Click Element  xpath=//a[@href="https://eauction.brizol.net/tenders"]
-  Click Element  xpath=//a[@href="https://eauction.brizol.net/tenders/index"]
-  Click Element  xpath=//a[contains(@href,"https://eauction.brizol.net/buyer/tender/create")]
+  Wait Until Page Contains Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders"]  10
+  Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders"]
+  Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders/index"]
+  Click Element  xpath=//a[contains(@href,"http://test-eauction.brizol.net/buyer/tender/create")]
   Select From List By Value  name=tender_method  open_${tender_data.data.procurementMethodType}
   Conv And Select From List By Value  name=Tender[value][valueAddedTaxIncluded]  ${tender_data.data.value.valueAddedTaxIncluded}
   ConvToStr And Input Text  name=Tender[value][amount]  ${tender_data.data.value.amount}
@@ -83,8 +83,8 @@ Login
   Click Element  xpath=//span[contains(text(),'${item.classification.id}')]
   Click Element  id=btn-ok
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  xpath=//div[@class="modal-backdrop fade"]  10
-  Input text  name=Tender[items][${index}][address][countryName]  ${item.deliveryAddress.countryName}
-  Input text  name=Tender[items][${index}][address][region]  ${item.deliveryAddress.region}
+  Select From List By Label  name=Tender[items][${index}][address][countryName]  ${item.deliveryAddress.countryName}
+  Select From List By Label  name=Tender[items][${index}][address][region]  ${item.deliveryAddress.region}
   Input text  name=Tender[items][${index}][address][locality]  ${item.deliveryAddress.locality}
   Input text  name=Tender[items][${index}][address][streetAddress]  ${item.deliveryAddress.streetAddress}
   Input text  name=Tender[items][${index}][address][postalCode]  ${item.deliveryAddress.postalCode}
@@ -165,9 +165,9 @@ Login
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   Switch browser  ${username}
-  Go To  https://eauction.brizol.net/
-  Click Element  xpath=//a[@href="https://eauction.brizol.net/tenders"]
-  Click Element  xpath=//a[@href="https://eauction.brizol.net/tenders/index"]
+  Go To  http://test-eauction.brizol.net/
+  Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders"]
+  Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders/index"]
   Wait Until Element Is Visible  id=more-filter
   Wait Until Keyword Succeeds  10 x  0.4 s  Run Keywords
   ...  Click Element  id=more-filter
@@ -252,7 +252,8 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   ${red}=  Evaluate  "\\033[1;31m"
   ${value}=  Run Keyword If
-  ...  'status' in '${field_name}'  Отримати інформацію про статус  ${field_name}
+  ...  'awards' in '${field_name}'  Отримати інформацію про авард  ${username}  ${tender_uaid}  ${field_name}
+  ...  ELSE IF  'status' in '${field_name}'  Отримати інформацію про статус  ${field_name}
   ...  ELSE IF  'value' in '${field_name}'  Get Text  xpath=//*[@tid="value.amount"]
   ...  ELSE IF  '${field_name}' == 'auctionPeriod.startDate'  Get Text  xpath=(//*[@tid="tenderPeriod.endDate"])[2]
   ...  ELSE IF  '${field_name}' == 'dgfDecisionDate'  Get Element Attribute  xpath=//*[@tid="dgfDecisionDate"]@data-ddate
@@ -268,7 +269,7 @@ Login
   ${value}=  Run Keyword If  'cancellations' in '${field_name}'
   ...  Get Text  xpath=//div[contains(@class,'alert-danger')]/h3[1]
   ...  ELSE  Get Text  xpath=//h2[@tid="${field_name.split('.')[-1]}"]
-  [return]  ${value}
+  [return]  ${value.lower()}
 
 Отримати інформацію із предмету
   [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
@@ -327,6 +328,15 @@ Login
   ${doc_value}=  convert_string_from_dict_brizol  ${doc_value}
   [return]  ${doc_value}
 
+Отримати інформацію про авард
+  [Arguments]  ${username}  ${tender_uaid}  ${field_name}
+  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
+  ${internal_id}=  openprocurement_client.Отримати internal id по UAid  Tender_Owner  ${TENDER['TENDER_UAID']}
+  ${internal_id}=  Convert To String  ${internal_id}
+  ${award_amount}=  get_award_amount  ${internal_id}  ${field_name[7:8]}
+  ${value}=  Get Text  xpath=//b[contains(text(), "${award_amount}")]/../following-sibling::td
+  [return]  ${value.lower()}
+
 ###############################################################################################################
 #######################################    ПОДАННЯ ПРОПОЗИЦІЙ    ##############################################
 ###############################################################################################################
@@ -342,12 +352,13 @@ Login
   Run Keyword If  '${MODE}' == 'dgfFinancialAssets'
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
+  Click Element  xpath=//input[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
   Wait Until Element Is Visible  name=delete_bids
   ${url}=  Log Location
   Run Keyword If  ${status}
-  ...  Go To  https://eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}
-  ...  ELSE  Go To  https://eauction.brizol.net/bids/decline/${url.split('?')[0].split('/')[-1]}
+  ...  Go To  http://test-eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
+  ...  ELSE  Go To  http://test-eauction.brizol.net/bids/decline/${url.split('?')[0].split('/')[-1]}?token=465
   Go To  ${url}
   Wait Until Keyword Succeeds  6 x  30 s  Run Keywords
   ...  Reload Page
@@ -356,8 +367,9 @@ Login
 Скасувати цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  Execute Javascript  window.confirm = function(msg) { return true; }
   Click Element  xpath=//button[@name="delete_bids"]
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
+  Click Element  xpath=//button[@data-bb-handler="confirm"]
 
 Змінити цінову пропозицію
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
@@ -370,10 +382,11 @@ Login
   Run Keyword If  '${MODE}' == 'dgfFinancialAssets'
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
+  Click Element  xpath=//input[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
   Wait Until Element Is Visible  name=delete_bids
   ${url}=  Log Location
-  Go To  https://eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}
+  Go To  http://test-eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
   Go To  ${url}
 
 Завантажити документ в ставку
@@ -387,10 +400,11 @@ Login
   Run Keyword If  '${MODE}' == 'dgfFinancialAssets'
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
   ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
+  Click Element  xpath=//input[@id="bid-checkforunlicensed"]/..
   Click Element  xpath=//button[contains(text(), 'Відправити')]
   Wait Until Element Is Visible  name=delete_bids
   ${url}=  Log Location
-  Go To  https://eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}
+  Go To  http://test-eauction.brizol.net/bids/send/${url.split('?')[0].split('/')[-1]}?token=465
   Go To  ${url}
 
 Завантажити фінансову ліцензію
@@ -428,12 +442,10 @@ Login
   Wait Until Keyword Succeeds   30 x   30 s  Run Keywords
   ...  Reload Page
   ...  AND  Click Element  xpath=//a[text()='Таблиця квалiфiкацiї']
-  Wait Until Element Is Visible  xpath=//button[@name='protokol_ok']
-  Click Element  xpath=//button[@name='protokol_ok']
-  Wait Until Element Is Visible  xpath=//button[@data-bb-handler="confirm"]
+  Wait Until Element Is Visible  xpath=//button[text()='Підтвердити отримання оплати']
+  Click Element  xpath=//button[text()='Підтвердити отримання оплати']
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
   Click Element  xpath=//button[@data-bb-handler="confirm"]
-  Wait Until Element Is Visible  xpath=//button[text()='Визнати переможцем']
-  Click Element  xpath=//button[text()='Визнати переможцем']
   Wait Until Element Is Visible   xpath=//button[contains(@class, 'tender_contract_btn')]
 
 Отримати кількість документів в ставці
@@ -466,20 +478,36 @@ Login
   Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
   Wait Until Keyword Succeeds  15 x  1 m  Дочекатися завантаження файлу  ${filepath.split('/')[-1]}
 
+Завантажити протокол аукціону в авард
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${award_index}
+  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
+  Choose File  xpath=(//input[@name="FileUpload[file]"])[last()]  ${filepath}
+  Click Element  name=protokol_ok
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
+  Click Element  xpath=//button[@data-bb-handler="confirm"]
+  Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
+  Wait Until Keyword Succeeds  15 x  1 m  Дочекатися завантаження файлу  ${filepath.split('/')[-1]}
+
+Підтвердити наявність протоколу аукціону
+  [Arguments]  ${username}  ${tender_uaid}  ${award_index}
+  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
+  Wait Until Page Contains  Очікується підписання договору
+
 Скасування рішення кваліфікаційної комісії
   [Arguments]  ${username}  ${tender_uaid}  ${award_num}
   Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
-  Wait Until Element Is Enabled  xpath=//button[@data-type="cancelled"]
-  Click Element  xpath=//button[@data-type="cancelled"]
-  Wait Until Element Is Visible  name=btn_cancel
-  Click Element  name=btn_cancel
-  Wait Until Page Contains  Сторiнка оновиться автоматично  30
-  Wait Until Page Does Not Contain  Сторiнка оновиться автоматично  60
+  Wait Until Element Is Enabled  xpath=//button[@name="cancelled"]
+  Click Element  xpath=//button[@name="cancelled"]
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
+  Click Element  xpath=//button[@data-bb-handler="confirm"]
 
 Дискваліфікувати постачальника
   [Arguments]  ${username}  ${tender_uaid}  ${award_num}  ${description}
+  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
   Click Element  xpath=(//input[@name="Award[cause][]"])[1]
   Click Element  xpath=//button[@name="send_prequalification"]
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
+  Click Element  xpath=//button[@data-bb-handler="confirm"]
   Wait Until Page Contains  Дисквалiфiковано
 
 Завантажити документ рішення кваліфікаційної комісії
