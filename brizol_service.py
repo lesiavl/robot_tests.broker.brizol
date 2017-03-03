@@ -6,6 +6,7 @@ from iso8601 import parse_date
 from pytz import timezone
 import os
 import urllib
+import json
 
 
 def convert_time(date):
@@ -31,7 +32,7 @@ def convert_string_from_dict_brizol(string):
         u'перiод уточнень': u'active.enquires',
         u'аукцiон': u'active.auction',
         u'квалiфiкацiя переможця': u'active.qualification',
-        u'торги відмінено': u'unsuccessful',
+        u'торги не відбулися': u'unsuccessful',
         u'завершена': u'complete',
         u'вiдмiнена': u'cancelled',
         u'торги були відмінені.': u'active',
@@ -48,12 +49,20 @@ def convert_string_from_dict_brizol(string):
         u'Інформація про учасників': u'bidders',
         u'прав вимоги за кредитами': u'dgfFinancialAssets',
         u'майна банків': u'dgfOtherAssets',
+        u'очікується протокол': u'pending.verification',
+        u'очікується кінець кваліфікації': u'pending.waiting',
+        u'очікується підписання договору': u'pending.payment',
+        u'переможець': u'active',
+        u'рiшення скасованно': u'cancelled',
+        u'дисквалiфiковано': u'unsuccessful',
     }.get(string, string)
 
 
 def adapt_procuringEntity(role_name, tender_data):
     if role_name == 'tender_owner':
         tender_data['data']['procuringEntity']['name'] = u"Ольмек"
+        if tender_data['data']['items'][0]['deliveryAddress']['region'] == u"місто Київ":
+            tender_data['data']['items'][0]['deliveryAddress']['region'] = u"Київ"
     return tender_data
 
 
@@ -95,3 +104,9 @@ def get_upload_file_path():
 
 def brizol_download_file(url, file_name, output_dir):
     urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
+
+
+def get_award_amount(internal_id, award_index):
+    r = urllib.urlopen('https://lb.api-sandbox.ea.openprocurement.org/api/2.4/auctions/{}'.format(internal_id)).read()
+    auction = json.loads(r)
+    return auction['data']['awards'][int(award_index)]["value"]['amount']
