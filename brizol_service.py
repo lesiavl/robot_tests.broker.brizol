@@ -33,7 +33,7 @@ def convert_string_from_dict_brizol(string):
         u'аукцiон': u'active.auction',
         u'квалiфiкацiя переможця': u'active.qualification',
         u'торги не відбулися': u'unsuccessful',
-        u'завершена': u'complete',
+        u'продаж завершений': u'complete',
         u'вiдмiнена': u'cancelled',
         u'торги були відмінені.': u'active',
         u'Юридична Інформація Майданчиків': u'x_dgfPlatformLegalDetails',
