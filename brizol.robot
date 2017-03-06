@@ -330,7 +330,8 @@ Login
 
 Отримати інформацію про авард
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
-  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
+  ${status}=  Run Keyword And Return Status  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
+  Run Keyword If  not ${status}  Click Element  xpath=//a[text()="Протокол розкриття пропозицiй"]
   ${internal_id}=  openprocurement_client.Отримати internal id по UAid  Tender_Owner  ${TENDER['TENDER_UAID']}
   ${internal_id}=  Convert To String  ${internal_id}
   ${award_amount}=  get_award_amount  ${internal_id}  ${field_name[7:8]}
@@ -525,11 +526,18 @@ Login
 
 Підтвердити підписання контракту
   [Arguments]  ${username}  ${tender_uaid}  ${contract_num}
+  ${filepath}=  get_upload_file_path
   Перейти на сторінку кваліфікації учасників   ${username}  ${tender_uaid}
   Wait Until Keyword Succeeds  5 x  0.5 s  Click Element  xpath=//button[contains(@class, 'tender_contract_btn')]
-  Wait Until Element Is Visible  xpath=(//input[contains(@name,"[contractNumber]")])[2]
-  Wait Until Keyword Succeeds  5 x  1 s  Run Keywords
-  ...  Input Text  xpath=(//input[contains(@name,"[contractNumber]")])[2]  777
+  Wait Until Element Is Visible  xpath=//*[text()="Додати документ"]
+  Choose File  xpath=//a[contains(@class,"uploadcontract")]/descendant::*[@name="FileUpload[file]"]  ${filepath}
+  Wait Until Element Is Visible  xpath=(//button[text()='Завантажити'])[2]
+  Click Element  xpath=(//button[text()='Завантажити'])[2]
+  Wait Until Element Is Not Visible  xpath=(//button[text()='Завантажити'])[2]
+  Wait Until Keyword Succeeds  10 x  60 s  Run Keywords
+  ...  Reload Page
+  ...  AND  Click Element  xpath=//button[contains(@class, 'tender_contract_btn')]
+  ...  AND  Input Text  xpath=(//input[contains(@name,"[contractNumber]")])[2]  777
   ...  AND  Choose Ok On Next Confirmation
   ...  AND  Click Element  xpath=(//button[text()='Активувати'])[2]
   ...  AND  Confirm Action
