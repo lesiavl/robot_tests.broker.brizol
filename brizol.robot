@@ -17,7 +17,8 @@ Library  brizol_service.py
 
 Підготувати клієнт для користувача
   [Arguments]  ${username}
-  Open Browser  ${USERS.users['${username}'].homepage}  ${USERS.users['${username}'].browser}  alias=${username}
+  Set Suite Variable  ${my_alias}  ${username + 'CUSTOM'}
+  Open Browser  ${USERS.users['${username}'].homepage}  ${USERS.users['${username}'].browser}  alias=${my_alias}
   Set Window Size  @{USERS.users['${username}'].size}
   Set Window Position  @{USERS.users['${username}'].position}
   Run Keyword If  '${username}' != 'brizol_Viewer'  Run Keywords
@@ -46,7 +47,7 @@ Login
   ${items}=  Get From Dictionary  ${tender_data.data}  items
   ${number_of_items}=  Get Length  ${items}
   ${tenderAttempts}=   Convert To String   ${tender_data.data.tenderAttempts}
-  Switch Browser  ${username}
+  Switch Browser  ${my_alias}
   Wait Until Page Contains Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders"]  10
   Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders"]
   Click Element  xpath=//a[@href="http://test-eauction.brizol.net/tenders/index"]
@@ -105,7 +106,7 @@ Login
 
 Завантажити документ
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}  ${illustration}=False
-  Switch Browser  ${username}
+  Switch Browser  ${my_alias}
   brizol.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
   Wait Until Element Is Visible  xpath=(//input[@name="FileUpload[file]"]/ancestor::a[contains(@class,'uploadfile')])[last()]
@@ -137,7 +138,7 @@ Login
 
 Завантажити документ в тендер з типом
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${documentType}
-  Switch Browser  ${username}
+  Switch Browser  ${my_alias}
   brizol.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   Click Element  xpath=//a[contains(text(),'Редагувати')]
   Choose File  xpath=(//*[@name="FileUpload[file]"])[last()]  ${filepath}
@@ -165,19 +166,22 @@ Login
 
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
-  Switch browser  ${username}
+  Switch browser  ${my_alias}
   Go To  http://test-eauction.brizol.net/tenders/index
   ${status}=  Run Keyword And Return Status  Wait Until Element Is Visible  xpath=//button[@data-dismiss="modal"]  5
   Run Keyword If  ${status}  Wait Until Keyword Succeeds  10 x  1 s  Закрити модалку з новинами
+  Click Element  id=more-filter
+  Дочекатися Анімації  id=tenderssearch-tender_cbd_id
   Wait Until Element Is Visible  id=tenderssearch-tender_cbd_id
   Input text  id=tenderssearch-tender_cbd_id  ${tender_uaid}
-  Click Element  xpath=//button[@data-test-id="search"]
   Wait Until Keyword Succeeds  30x  400ms  Перейти на сторінку з інформацією про тендер  ${tender_uaid}
 
 Перейти на сторінку з інформацією про тендер
   [Arguments]  ${tender_uaid}
-  Click Element  xpath=//*[contains(text(),'${tender_uaid}') and contains('${tender_uaid}', normalize-space(text()))]/ancestor::div[@class="search-result"]/descendant::a[contains(@href,"/view/")]
-  Wait Until Keyword Succeeds  20 x  1 s  Element Should Be Visible  xpath=//*[@data-test-id="tenderID"]
+  Click Element  xpath=//button[@data-test-id="search"]
+  Wait Until Element Is Visible  xpath=//*[contains(text(),'${tender_uaid}') and contains('${tender_uaid}', normalize-space(text()))]/ancestor::div[@class="search-result"]/descendant::a[contains(@href,"/view/")]  10
+  Wait Until Keyword Succeeds  5 x  1 s  Click Element  xpath=//*[contains(text(),'${tender_uaid}') and contains('${tender_uaid}', normalize-space(text()))]/ancestor::div[@class="search-result"]/descendant::a[contains(@href,"/view/")]
+  Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//*[@data-test-id="tenderID"]
 
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
@@ -343,17 +347,18 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
   ${status}=  Get From Dictionary  ${bid['data']}  qualified
   ${file_path}=  get_upload_file_path
+  Switch Browser  ${my_alias}
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
   Run Keyword And Ignore Error  brizol.Скасувати цінову пропозицію  ${username}  ${tender_uaid}
   Run Keyword If  '${MODE}' != 'dgfInsider'  ConvToStr And Input Text  xpath=//input[contains(@name, '[value][amount]')]  ${bid.data.value.amount}
-  ...  ELSE  Click Element  xpath=//input[@id="bid-participate"]/..
+  ...  ELSE  Scroll And Click  xpath=//input[@id="bid-participate"]/..
   Choose File  name=FileUpload[file]  ${file_path}
   Run Keyword If  '${MODE}' == 'dgfFinancialAssets'  Run Keywords
   ...  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  financialLicense
   ...  AND  Click Element  xpath=//*[@id="bid-checkforunlicensed"]/..
-  ...  ELSE  Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
+  ...  ELSE  Scroll And Select From List By Value  xpath=(//*[contains(@name,'[documentType]')])[last()]  commercialProposal
   Click Element  xpath=//button[contains(text(), 'Відправити')]
-  Wait Until Element Is Visible  xpath=//div[contains(@class,'alert-success')]
+  Wait Until Page Contains Element  xpath=//div[contains(@class,'alert-success')]
   Run Keyword If  '${MODE}' != 'dgfInsider'  Опублікувати Пропозицію  ${status}
 
 Опублікувати Пропозицію
@@ -422,18 +427,20 @@ Login
 
 Отримати посилання на аукціон для глядача
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}=${Empty}
+  Switch Browser  ${my_alias}
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  ${auction_url}  Get Element Attribute  xpath=(//a[contains(@href, "openprocurement.org/auctions")])[1]@href
+  ${auction_url}  Get Element Attribute  xpath=(//a[contains(@href, "openprocurement.org/")])[1]@href
   [return]  ${auction_url}
 
 Отримати посилання на аукціон для учасника
-  [Arguments]  ${username}  ${tender_uaid}
+  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}=${Empty}
+  Switch Browser  ${my_alias}
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
-  Click Element  xpath=//a[@class="auction_seller_url"]
-  Select Window  new
-  ${auction_url}=  Get Location
-  Select Window
-  [return]  ${auction_url.split("&return_url")[0]}
+  ${current_url}=  Get Location
+  Execute Javascript  window['url'] = null; $.get( "http://test-eauction.brizol.net/seller/tender/updatebid", { id: "${current_url.split("/")[-1]}"}, function(data){ window['url'] = data.data.participationUrl },'json');
+  Wait Until Keyword Succeeds  20 x  1 s  JQuery Ajax Should Complete
+  ${auction_url}=  Execute Javascript  return window['url'];
+  [return]  ${auction_url}
 
 
 ###############################################################################################################
@@ -573,3 +580,34 @@ Input Date
   brizol.Пошук тендера по ідентифікатору   ${username}  ${tender_uaid}
   Wait Until Element Is Visible  xpath=//a[text()='Таблиця квалiфiкацiї']
   Click Element  xpath=//a[text()='Таблиця квалiфiкацiї']
+
+Дочекатися Анімації
+  [Arguments]  ${locator}
+  Set Test Variable  ${prev_vert_pos}  0
+  Wait Until Keyword Succeeds  20 x  500 ms  Position Should Equals  ${locator}
+
+Position Should Equals
+  [Arguments]  ${locator}
+  ${current_vert_pos}=  Get Vertical Position  ${locator}
+  ${status}=  Run Keyword And Return Status  Should Be Equal  ${prev_vert_pos}  ${current_vert_pos}
+  Set Test Variable  ${prev_vert_pos}  ${current_vert_pos}
+  Should Be True  ${status}
+
+Scroll To Element
+  [Arguments]  ${locator}
+  ${elem_vert_pos}=  Get Vertical Position  ${locator}
+  Execute Javascript  window.scrollTo(0,${elem_vert_pos - 200});
+
+Scroll And Click
+  [Arguments]  ${locator}
+  Scroll To Element  ${locator}
+  Click Element  ${locator}
+
+Scroll And Select From List By Value
+  [Arguments]  ${locator}  ${value}
+  Scroll To Element  ${locator}
+  Select From List By Value  ${locator}  ${value}
+
+JQuery Ajax Should Complete
+  ${active}=  Execute Javascript  return jQuery.active
+  Should Be Equal  "${active}"  "0"
