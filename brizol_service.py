@@ -101,9 +101,3 @@ def get_upload_file_path():
 
 def brizol_download_file(url, file_name, output_dir):
     urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
-
-
-def get_award_amount(internal_id, award_index):
-    r = urllib.urlopen('https://lb.api-sandbox.ea.openprocurement.org/api/2.4/auctions/{}'.format(internal_id)).read()
-    auction = json.loads(r)
-    return auction['data']['awards'][int(award_index)]["value"]['amount']

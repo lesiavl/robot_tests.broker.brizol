@@ -333,10 +333,8 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   ${status}=  Run Keyword And Return Status  Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
   Run Keyword If  not ${status}  Click Element  xpath=//a[text()="Протокол розкриття пропозицiй"]
-  ${internal_id}=  openprocurement_client.Отримати internal id по UAid  Tender_Owner  ${TENDER['TENDER_UAID']}
-  ${internal_id}=  Convert To String  ${internal_id}
-  ${award_amount}=  get_award_amount  ${internal_id}  ${field_name[7:8]}
-  ${value}=  Get Text  xpath=//b[contains(text(), "${award_amount}")]/../following-sibling::td
+  ${award_index}=  Convert To Integer  ${field_name[7:8]}
+  ${value}=  Get Text  xpath=(//div[@data-mtitle="Статус:"])[${award_index + 1}]
   [return]  ${value.lower()}
 
 ###############################################################################################################
