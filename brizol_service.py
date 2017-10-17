@@ -59,7 +59,7 @@ def convert_string_from_dict_brizol(string):
         u'очікується підписання договору': u'pending.payment',
         u'переможець': u'active',
         u'рiшення скасованно': u'cancelled',
-        u'дисквалiфiковано': u'unsuccessful',
+        u'дискваліфіковано': u'unsuccessful',
     }.get(string, string)
 
 
