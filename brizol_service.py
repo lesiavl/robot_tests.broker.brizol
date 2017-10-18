@@ -6,7 +6,6 @@ from iso8601 import parse_date
 from pytz import timezone
 import os
 import urllib
-import json
 
 
 def convert_time(date):
