@@ -166,7 +166,7 @@ Login
 
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
-  Switch browser  ${my_alias}
+  Switch Browser  ${my_alias}
   Go To  http://test-eauction.brizol.net/tenders/index
   ${status}=  Run Keyword And Return Status  Wait Until Element Is Visible  xpath=//button[@data-dismiss="modal"]  5
   Run Keyword If  ${status}  Wait Until Keyword Succeeds  10 x  1 s  Закрити модалку з новинами
@@ -506,7 +506,7 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${award_num}
   Перейти на сторінку кваліфікації учасників  ${username}  ${tender_uaid}
   Wait Until Element Is Enabled  xpath=//button[@name="cancelled"]
-  Click Element  xpath=//button[@name="cancelled"]
+  Scroll And Click  xpath=//button[@name="cancelled"]
   Wait Until Keyword Succeeds  10 x  1 s  Element Should Be Visible  xpath=//button[@data-bb-handler="confirm"]
   Click Element  xpath=//button[@data-bb-handler="confirm"]
 

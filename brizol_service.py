@@ -6,7 +6,6 @@ from iso8601 import parse_date
 from pytz import timezone
 import os
 import urllib
-import json
 
 
 def convert_time(date):
@@ -55,10 +54,10 @@ def convert_string_from_dict_brizol(string):
         u'прав вимоги за кредитами': u'dgfFinancialAssets',
         u'майна банків': u'dgfOtherAssets',
         u'очікується протокол': u'pending.verification',
-        u'очікується кінець кваліфікації': u'pending.waiting',
+        u'на черзі': u'pending.waiting',
         u'очікується підписання договору': u'pending.payment',
         u'переможець': u'active',
-        u'рiшення скасованно': u'cancelled',
+        u'рiшення скасовано': u'cancelled',
         u'дискваліфіковано': u'unsuccessful',
     }.get(string, string)
 
